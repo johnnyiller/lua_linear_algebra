@@ -178,5 +178,30 @@ describe("Matrix", function()
 
   end)
 
+  describe("matrix multiplication", function()
+
+    it("should work with multipliable matrices", function()
+      local r = require('rational')
+      local A = Matrix.new(2, 2, r(0,1), r(1,1))
+      local B = Matrix.new(2, 3, r(0,1), r(1,1))
+      matrix_rows = {
+        {r(2,1), r(3,1)},
+        {r(1,1), r(-5,1)}
+      }
+      A.load(matrix_rows)
+      matrix_rows = {
+        {r(4,1), r(3,1), r(6,1)},
+        {r(1,1), r(-2,1), r(3,1)}
+      }
+      B.load(matrix_rows)
+      C = A * B
+      assert.equal(C.get(1,1),r(11,1))
+      assert.equal(C.get(1,2),r(0,1))
+      assert.equal(C.get(2,3),r(-9,1))
+
+    end)
+
+  end)
+
 
 end)

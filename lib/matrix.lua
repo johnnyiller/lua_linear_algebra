@@ -10,6 +10,9 @@ function Matrix.new(rows,columns,zero,one)
   local one = one or 1
   
   local self = {}
+
+  self.columns = columns
+  self.rows = rows
   -- call a function for each x y pair
   local function each(func)
     for x=1, rows do
@@ -38,25 +41,19 @@ function Matrix.new(rows,columns,zero,one)
   end
 
   local function lead_zeros_for_row(row_index)
-    for i=1, columns do 
-      local value = self.get(row_index, i)
+    for column=1, columns do 
+      local value = self.get(row_index, column)
       if value and value ~= zero then
-        return i - 1
+        return column - 1
       end
     end
   end
 
   local function swap_row(row_one, row_two)
     -- double assignment allows quick swapping...
-    for i=1, columns do 
-      self[row_one*columns + i], self[row_two*columns + i] = self[row_two*columns + i], self[row_one*columns + i]
+    for column=1, columns do 
+      self[row_one*columns + column], self[row_two*columns + column] = self[row_two*columns + column], self[row_one*columns + column]
     end
-
-  end
-
-  local function replace_row(pivot_row, row_two)
-
-            
 
   end
 
@@ -88,14 +85,14 @@ function Matrix.new(rows,columns,zero,one)
       local first_sub_value = factor * pivot_value
 
       if pivot_basis - first_sub_value == zero then
-        for i=pivot_column, columns do 
-          local sub_amount = factor * self.get(start_row, i)
-          self.set(sub_row, i, self.get(sub_row, i) - sub_amount)
+        for column=pivot_column, columns do 
+          local sub_amount = factor * self.get(start_row, column)
+          self.set(sub_row, column, self.get(sub_row, column) - sub_amount)
         end
       else
-        for i=pivot_column, columns do 
-          local sub_amount = factor * self.get(start_row, i)
-          self.set(sub_row, i, self.get(sub_row, i) + sub_amount)
+        for column=pivot_column, columns do 
+          local sub_amount = factor * self.get(start_row, column)
+          self.set(sub_row, column, self.get(sub_row, column) + sub_amount)
         end
       end
 
@@ -122,9 +119,10 @@ function Matrix.new(rows,columns,zero,one)
 
       local pivot_column = lead_zeros_for_row(row) + 1
       local pivot_value = self.get(row, pivot_column)
+
       -- scale row so that the pivot is a 1
-      for i=pivot_column, columns do
-        self.set(row, i, self.get(row,i) / pivot_value)  
+      for column=pivot_column, columns do
+        self.set(row, column, self.get(row,column) / pivot_value)  
       end
 
       for prev_row = row - 1, 1, -1 do 
@@ -226,11 +224,33 @@ function Matrix.new(rows,columns,zero,one)
     end)
     return str
   end
+
+  -- Do some matrix multiplication by hand to verify this logic.
+  local function _multiply(A,B)
+    if A.columns ~= B.rows then
+      error("sorry columns and rows must match to multiply matrices")
+    end
+    _new_matrix = Matrix.new(A.rows, B.columns, zero, one )
+    for i=1, A.rows do
+      for j=1, B.columns do 
+        local row_add = zero
+        for k=1, A.columns do 
+          row_add = row_add + A.get(i,k) * B.get(k,j) 
+        end
+        _new_matrix.set(i,j,row_add)
+      end
+    end
+    return _new_matrix
+
+  end
    
   -- meta table is like built in methods for the
-  -- object, they are used by other built ins from 
-  -- what I can tell
-  setmetatable(self, { __tostring = _matrix_tostring })
+  -- object, they are used by other built ins from
+  -- allows you to use operators with your tables
+  setmetatable(self, { 
+    __tostring = _matrix_tostring,
+    __mul = _multiply
+  })
 
   return self
 end
